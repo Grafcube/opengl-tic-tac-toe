@@ -37,6 +37,8 @@ pub fn main() !void {
     for (board) |*pt| {
         pt.* = .{ null, null, null };
     }
+    var move: u8 = 0;
+    var winner: ?Player = null;
 
     main: while (true) {
         var event: sdl.SDL_Event = undefined;
@@ -44,6 +46,7 @@ pub fn main() !void {
             switch (event.type) {
                 sdl.SDL_QUIT => break :main,
                 sdl.SDL_MOUSEBUTTONUP => {
+                    if (winner != null or move > 8) break;
                     const cell = util.cell_click(
                         @intToFloat(f32, event.button.x),
                         @intToFloat(f32, event.button.y),
@@ -59,6 +62,7 @@ pub fn main() !void {
                     } else {
                         current_player = Player.X;
                     }
+                    move += 1;
                 },
                 else => {},
             }
@@ -69,6 +73,7 @@ pub fn main() !void {
         gl.glClearColor(0.067, 0.067, 0.106, 0.0);
 
         draw.draw_board();
+        winner = check_win(board);
 
         for (board) |set, x| {
             for (set) |val, y| {
@@ -81,4 +86,34 @@ pub fn main() !void {
         gl.glFlush();
         sdl.SDL_GL_SwapWindow(window);
     }
+}
+
+fn check_win(board: [3][3]?Player) ?Player {
+    // Check LtR diagonal
+    if (board[0][0] == board[1][1] and board[0][0] == board[2][2]) {
+        return board[0][0];
+    }
+
+    // Check RtL diagonal
+    if (board[2][0] == board[1][1] and board[2][0] == board[0][2]) {
+        return board[2][0];
+    }
+
+    // Check rows
+    for (board) |row| {
+        if (row[0] == row[1] and row[0] == row[2]) {
+            return row[0];
+        }
+    }
+
+    // Check columns
+    var i: u8 = 0;
+    while (i < 3) {
+        defer i += 1;
+        if (board[0][i] == board[1][i] and board[0][i] == board[2][i]) {
+            return board[0][i];
+        }
+    }
+
+    return null;
 }
