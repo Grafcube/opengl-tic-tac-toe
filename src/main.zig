@@ -32,6 +32,12 @@ pub fn main() !void {
     const ctx = sdl.SDL_GL_CreateContext(window);
     _ = ctx;
 
+    var current_player = Player.X;
+    var state: [3][3]?Player = undefined;
+    for (state) |*pt| {
+        pt.* = .{ null, null, null };
+    }
+
     main: while (true) {
         var event: sdl.SDL_Event = undefined;
         while (sdl.SDL_PollEvent(&event) == 1) {
@@ -43,7 +49,7 @@ pub fn main() !void {
                         @intToFloat(f32, event.button.y),
                         dim,
                     );
-                    std.debug.print("{},{}\n", .{ cell.x, cell.y });
+                    state[cell.x][cell.y] = current_player;
                 },
                 else => {},
             }
@@ -54,24 +60,14 @@ pub fn main() !void {
         gl.glClearColor(0.067, 0.067, 0.106, 0.0);
 
         draw.draw_board();
-        draw.draw_mark(0, 0, Player.X);
-        draw.draw_mark(0, 1, Player.X);
-        draw.draw_mark(0, 2, Player.X);
-        draw.draw_mark(1, 0, Player.X);
-        draw.draw_mark(1, 1, Player.X);
-        draw.draw_mark(1, 2, Player.X);
-        draw.draw_mark(2, 0, Player.X);
-        draw.draw_mark(2, 1, Player.X);
-        draw.draw_mark(2, 2, Player.X);
-        draw.draw_mark(0, 0, Player.O);
-        draw.draw_mark(0, 1, Player.O);
-        draw.draw_mark(0, 2, Player.O);
-        draw.draw_mark(1, 0, Player.O);
-        draw.draw_mark(1, 1, Player.O);
-        draw.draw_mark(1, 2, Player.O);
-        draw.draw_mark(2, 0, Player.O);
-        draw.draw_mark(2, 1, Player.O);
-        draw.draw_mark(2, 2, Player.O);
+
+        for (state) |set, x| {
+            for (set) |val, y| {
+                if (val) |player| {
+                    draw.draw_mark(@intCast(u8, x), @intCast(u8, y), player);
+                }
+            }
+        }
 
         gl.glFlush();
         sdl.SDL_GL_SwapWindow(window);
