@@ -21,19 +21,19 @@ pub fn draw_board() void {
 pub fn draw_mark(x: u8, y: u8, sign: player.Player) void {
     const coords: [3][3]Vector2(f32) = .{
         .{
-            Vector2(f32){ .x = -1.0, .y = -1.0 },
-            Vector2(f32){ .x = -0.33, .y = -1.0 },
-            Vector2(f32){ .x = 0.33, .y = -1.0 },
-        },
-        .{
             Vector2(f32){ .x = -1.0, .y = 0.33 },
-            Vector2(f32){ .x = -0.33, .y = 0.33 },
-            Vector2(f32){ .x = 0.33, .y = 0.33 },
+            Vector2(f32){ .x = -1.0, .y = -0.33 },
+            Vector2(f32){ .x = -1.0, .y = -1.0 },
         },
         .{
-            Vector2(f32){ .x = -1.0, .y = -0.33 },
+            Vector2(f32){ .x = -0.33, .y = 0.33 },
             Vector2(f32){ .x = -0.33, .y = -0.33 },
+            Vector2(f32){ .x = -0.33, .y = -1.0 },
+        },
+        .{
+            Vector2(f32){ .x = 0.33, .y = 0.33 },
             Vector2(f32){ .x = 0.33, .y = -0.33 },
+            Vector2(f32){ .x = 0.33, .y = -1.0 },
         },
     };
 
