@@ -50,6 +50,11 @@ pub fn main() !void {
                         dim,
                     );
                     state[cell.x][cell.y] = current_player;
+                    if (current_player == Player.X) {
+                        current_player = Player.O;
+                    } else {
+                        current_player = Player.X;
+                    }
                 },
                 else => {},
             }
