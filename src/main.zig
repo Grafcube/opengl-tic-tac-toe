@@ -33,8 +33,8 @@ pub fn main() !void {
     _ = ctx;
 
     var current_player = Player.X;
-    var state: [3][3]?Player = undefined;
-    for (state) |*pt| {
+    var board: [3][3]?Player = undefined;
+    for (board) |*pt| {
         pt.* = .{ null, null, null };
     }
 
@@ -49,7 +49,11 @@ pub fn main() !void {
                         @intToFloat(f32, event.button.y),
                         dim,
                     );
-                    state[cell.x][cell.y] = current_player;
+                    if (board[cell.x][cell.y] == null) {
+                        board[cell.x][cell.y] = current_player;
+                    } else {
+                        break;
+                    }
                     if (current_player == Player.X) {
                         current_player = Player.O;
                     } else {
@@ -66,7 +70,7 @@ pub fn main() !void {
 
         draw.draw_board();
 
-        for (state) |set, x| {
+        for (board) |set, x| {
             for (set) |val, y| {
                 if (val) |player| {
                     draw.draw_mark(@intCast(u8, x), @intCast(u8, y), player);
