@@ -37,6 +37,14 @@ pub fn main() !void {
         while (sdl.SDL_PollEvent(&event) == 1) {
             switch (event.type) {
                 sdl.SDL_QUIT => break :main,
+                sdl.SDL_MOUSEBUTTONUP => {
+                    const cell = util.cell_click(
+                        @intToFloat(f32, event.button.x),
+                        @intToFloat(f32, event.button.y),
+                        dim,
+                    );
+                    std.debug.print("{},{}\n", .{ cell.x, cell.y });
+                },
                 else => {},
             }
         }
