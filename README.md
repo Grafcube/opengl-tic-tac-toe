@@ -9,3 +9,13 @@ headers available on your system.
 ```sh
 zig build run
 ```
+
+## Screenshots
+
+![default](assets/screenshot0.png)
+
+![X win](assets/screenshotX.png)
+
+![o win](assets/screenshotO.png)
+
+![Tie](assets/screenshot1.png)
