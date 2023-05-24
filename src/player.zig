@@ -4,14 +4,13 @@ const Vector2 = @import("util.zig").Vector2;
 
 pub const Player = enum { X, O };
 
-pub fn draw_x(offset: Vector2(f32)) void {
-    const padding = 0.12;
+pub fn draw_x(offset: Vector2(f32), length: f32, padding: f32) void {
     const start = Vector2(f32){
         .x = offset.x + padding,
-        .y = offset.y + 0.66 - padding,
+        .y = offset.y + length - padding,
     };
     const end = Vector2(f32){
-        .x = offset.x + 0.66 - padding,
+        .x = offset.x + length - padding,
         .y = offset.y + padding,
     };
 
@@ -26,11 +25,10 @@ pub fn draw_x(offset: Vector2(f32)) void {
     gl.glEnd();
 }
 
-pub fn draw_o(offset: Vector2(f32)) void {
-    const radius = 0.26;
+pub fn draw_o(offset: Vector2(f32), radius: f32, padding: f32, steps: f32) void {
     const origin = Vector2(f32){
-        .x = (offset.x + (0.66 - 2 * radius) / 2.0) + math.sqrt(2) * radius,
-        .y = (offset.y + (0.66 - 2 * radius) / 2.0) + math.sqrt(2) * radius,
+        .x = offset.x + radius + padding,
+        .y = offset.y + radius + padding,
     };
 
     gl.glLineWidth(16.0);
@@ -44,7 +42,7 @@ pub fn draw_o(offset: Vector2(f32)) void {
             origin.x + (radius * math.cos(i * math.tau / resolution)),
             origin.y + (radius * math.sin(i * math.tau / resolution)),
         );
-        i += 6;
+        i += resolution / steps;
     }
     gl.glEnd();
 }

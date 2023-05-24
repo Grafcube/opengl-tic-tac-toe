@@ -15,7 +15,7 @@ const Error = error{
 };
 
 pub fn main() !void {
-    if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) < 0) {
+    if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) {
         std.log.err("Failed to initialize SDL: {s}\n", .{sdl.SDL_GetError()});
         return error.InitError;
     }
@@ -29,9 +29,14 @@ pub fn main() !void {
         dim.y,
         sdl.SDL_WINDOW_OPENGL,
     );
+    defer sdl.SDL_DestroyWindow(window);
     const ctx = sdl.SDL_GL_CreateContext(window);
     _ = ctx;
 
+    game(window);
+}
+
+fn game(window: ?*sdl.SDL_Window) void {
     var current_player = Player.X;
     var board: [3][3]?Player = undefined;
     for (board) |*pt| {
@@ -46,7 +51,15 @@ pub fn main() !void {
             switch (event.type) {
                 sdl.SDL_QUIT => break :main,
                 sdl.SDL_MOUSEBUTTONUP => {
-                    if (winner != null or move > 8) break;
+                    if (winner != null or move > 8) {
+                        winner = null;
+                        move = 0;
+                        current_player = Player.X;
+                        for (board) |*pt| {
+                            pt.* = .{ null, null, null };
+                        }
+                        break;
+                    }
                     const cell = util.cell_click(
                         @intToFloat(f32, event.button.x),
                         @intToFloat(f32, event.button.y),
@@ -73,7 +86,6 @@ pub fn main() !void {
         gl.glClearColor(0.067, 0.067, 0.106, 0.0);
 
         draw.draw_board();
-        winner = check_win(board);
 
         for (board) |set, x| {
             for (set) |val, y| {
@@ -81,6 +93,13 @@ pub fn main() !void {
                     draw.draw_mark(@intCast(u8, x), @intCast(u8, y), player);
                 }
             }
+        }
+
+        winner = check_win(board);
+        if (winner) |player| {
+            draw.draw_end_screen(player);
+        } else if (move > 8) {
+            draw.draw_end_screen(null);
         }
 
         gl.glFlush();
