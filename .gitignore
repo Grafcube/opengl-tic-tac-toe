@@ -1,7 +1,7 @@
-zig-cache/
-zig-out/
-/release/
-/debug/
-/build/
-/build-*/
-/docgen_tmp/
+*
+!.gitignore
+!assets/
+!LICENSE
+!Makefile
+!README.md
+!tic-tac-toe.c
