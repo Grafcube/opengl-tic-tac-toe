@@ -9,25 +9,31 @@ const char TITLE[] = "Tic-Tac-Toe: SDL2+OpenGL";
 
 typedef struct {
   int x, y;
-} Vector2u;
+} Vector2i;
 
 typedef struct {
   float x, y;
 } Vector2f;
 
-const Vector2u DIM = {600, 600};
-
 typedef enum { PLAYER_X, PLAYER_O } Player;
+
+const Vector2i DIM = {600, 600};
+
+const Vector2f CELL_COORDS[3][3] = {
+    {{-1.0, 0.33}, {-1.0, -0.33}, {-1.0, -1.0}},
+    {{-0.33, 0.33}, {-0.33, -0.33}, {-0.33, -1.0}},
+    {{0.33, 0.33}, {0.33, -0.33}, {0.33, -1.0}},
+};
 
 void game(SDL_Window *);
 void draw_board();
 void draw_mark(uint, uint, Player);
 void draw_x(Vector2f, float, float);
 void draw_o(Vector2f, float, float, float);
-void draw_end_screen(int);
-int check_win(int[3][3]);
+void draw_end_screen(int, float, Vector2f);
+int check_win(int[3][3], float *, Vector2f *);
 uint find_cell(float axis, float max);
-Vector2u cell_click(float, float);
+Vector2i cell_click(float, float);
 
 int main() {
   SDL_Init(SDL_INIT_VIDEO);
@@ -55,6 +61,8 @@ void game(SDL_Window *window) {
   };
   int move = 0;
   int winner = -1;
+  float angle = 0;
+  Vector2f offset = {0, 0};
   int running = 1;
 
   while (running) {
@@ -77,7 +85,7 @@ void game(SDL_Window *window) {
           break;
         }
 
-        Vector2u cell = cell_click(event.button.x, event.button.y);
+        Vector2i cell = cell_click(event.button.x, event.button.y);
         if (board[cell.x][cell.y] == -1) {
           board[cell.x][cell.y] = current_player;
         } else {
@@ -97,6 +105,7 @@ void game(SDL_Window *window) {
       }
     }
 
+    glLoadIdentity();
     glViewport(0, 0, DIM.x, DIM.y);
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0.067, 0.067, 0.106, 0.0);
@@ -112,9 +121,9 @@ void game(SDL_Window *window) {
       }
     }
 
-    winner = check_win(board);
+    winner = check_win(board, &angle, &offset);
     if (winner != -1 || move > 8)
-      draw_end_screen(winner);
+      draw_end_screen(winner, angle, offset);
 
     glFlush();
     SDL_GL_SwapWindow(window);
@@ -135,50 +144,71 @@ void draw_board() {
   glEnd();
 }
 
-int check_win(int board[3][3]) {
+int check_win(int board[3][3], float *angle, Vector2f *offset) {
   // Check LtR diagonal
-  if (board[0][0] == board[1][1] && board[0][0] == board[2][2]) {
+  if (board[0][0] == board[1][1] && board[0][0] == board[2][2] &&
+      board[0][0] != -1) {
+    *angle = -45;
+    offset->x = offset->y = 0;
     return board[0][0];
   }
 
   // Check RtL diagonal
-  if (board[2][0] == board[1][1] && board[2][0] == board[0][2]) {
+  if (board[2][0] == board[1][1] && board[2][0] == board[0][2] &&
+      board[2][0] != -1) {
+    offset->x = offset->y = 0;
+    *angle = 45;
     return board[2][0];
   }
 
   // Check rows
   for (int i = 0; i < 3; i++) {
-    if (board[i][0] == board[i][1] && board[i][0] == board[i][2]) {
-      return board[i][0];
+    if (board[0][i] == board[1][i] && board[0][i] == board[2][i] &&
+        board[0][i] != -1) {
+      *angle = 0;
+      offset->x = 0;
+      offset->y = (1 - i) * 0.67;
+      return board[0][i];
     }
   }
 
   // Check columns
   for (int i = 0; i < 3; i++) {
-    if (board[0][i] == board[1][i] && board[0][i] == board[2][i]) {
-      return board[0][i];
+    if (board[i][0] == board[i][1] && board[i][0] == board[i][2] &&
+        board[i][0] != -1) {
+      *angle = 90;
+      offset->x = (1 - i) * 0.67;
+      offset->y = 0;
+      return board[i][0];
     }
   }
 
+  *angle = 0;
+  offset->x = offset->y = 2;
   return -1;
 }
 
-void draw_end_screen(int player) {
+void draw_end_screen(int player, float angle, Vector2f offset) {
   glColor3f(0.192, 0.196, 0.267);
+  glLoadIdentity();
+  glRotatef(angle, 0, 0, 1);
+  glTranslatef(0, angle != 90 ? offset.y : offset.x, 0);
   glBegin(GL_QUADS);
-  glVertex2f(-1.0, 0.10);
-  glVertex2f(1.0, 0.10);
-  glVertex2f(1.0, -0.10);
-  glVertex2f(-1.0, -0.10);
+  glVertex2f(-2.0, 0.10);
+  glVertex2f(2.0, 0.10);
+  glVertex2f(2.0, -0.10);
+  glVertex2f(-2.0, -0.10);
   glEnd();
 
-  Vector2f offset = {-0.10, -0.10};
+  glLoadIdentity();
+  glTranslatef(-offset.x, offset.y, 0);
+  Vector2f shift = {-0.10, -0.10};
   switch (player) {
   case PLAYER_X:
-    draw_x(offset, 0.2, 0.04);
+    draw_x(shift, 0.2, 0.04);
     break;
   case PLAYER_O:
-    draw_o(offset, 0.06, 0.04, 8);
+    draw_o(shift, 0.06, 0.04, 8);
     break;
   default:
     break;
@@ -186,18 +216,12 @@ void draw_end_screen(int player) {
 }
 
 void draw_mark(uint x, uint y, Player sign) {
-  Vector2f coords[3][3] = {
-      {{-1.0, 0.33}, {-1.0, -0.33}, {-1.0, -1.0}},
-      {{-0.33, 0.33}, {-0.33, -0.33}, {-0.33, -1.0}},
-      {{0.33, 0.33}, {0.33, -0.33}, {0.33, -1.0}},
-  };
-
   switch (sign) {
   case PLAYER_X:
-    draw_x(coords[x][y], 0.66, 0.12);
+    draw_x(CELL_COORDS[x][y], 0.67, 0.12);
     break;
   case PLAYER_O:
-    draw_o(coords[x][y], 0.24, 0.08, 16);
+    draw_o(CELL_COORDS[x][y], 0.24, 0.08, 16);
     break;
   }
 }
@@ -242,15 +266,15 @@ void draw_o(Vector2f offset, float radius, float padding, float steps) {
 uint find_cell(float axis, float max) {
   if ((axis / max) < 0.33) {
     return 0;
-  } else if ((axis / max) < 0.66) {
+  } else if ((axis / max) < 0.67) {
     return 1;
   } else {
     return 2;
   }
 }
 
-Vector2u cell_click(float x, float y) {
-  Vector2u res = {
+Vector2i cell_click(float x, float y) {
+  Vector2i res = {
       find_cell(x, DIM.x),
       find_cell(y, DIM.y),
   };
